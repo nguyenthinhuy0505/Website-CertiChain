@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocVerify - Xác Thực Giấy Tờ Blockchain</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .left-panel {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 30px;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+
+        .feature-list i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 50%;
+        }
+
+        .right-panel {
+            padding: 40px;
+        }
+
+        .wallet-section {
+            background: var(--light);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .wallet-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            background: var(--dark);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .network-info {
+            background: var(--warning);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #3a9fc9;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .document-section {
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: #f8f9ff;
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 15px;
+        }
+
+        .file-info {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .file-info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .verification-result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            color: #155724;
+        }
+
+        .result-error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+
+        .result-info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            color: #0c5460;
+        }
+
+        .transaction-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .transaction-link:hover {
+            text-decoration: underline;
+        }
+
+        .hash-display {
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .document-history {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .history-item {
+            background: var(--light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--success);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-verified {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .left-panel {
+                padding: 30px 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-shield-alt"></i>
+                DocVerify
+            </h1>
+            <p>Xác thực giấy tờ an toàn với công nghệ Blockchain</p>
+        </div>
+
+        <div class="app-container">
+            <!-- Left Panel - Information -->
+            <div class="left-panel">
+                <h2>Bảo vệ tài liệu của bạn với Blockchain</h2>
+                <p style="margin-top: 15px; opacity: 0.9;">
+                    Công nghệ tiên tiến giúp xác thực và bảo vệ giấy tờ quan trọng một cách an toàn và minh bạch.
+                </p>
+                
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-lock"></i>
+                        <div>
+                            <strong>Bảo mật tuyệt đối</strong>
+                            <div style="font-size: 0.9rem; opacity: 0.8;">Dữ liệu được mã hóa và lưu trữ an toàn trên Blockchain</div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-fingerprint"></i>
+                        <div>
+                            <strong>Định danh duy nhất</strong>
+                            <div style="font-size: 0.9rem; opacity: 0.8;">Mỗi tài liệu có mã hash không thể làm giả</div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle"></i>
+                        <div>
+                            <strong>Xác thực tức thì</strong>
+                            <div style="font-size: 0.9rem; opacity: 0.8;">Kiểm tra tính xác thực của tài liệu mọi lúc</div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-history"></i>
+                        <div>
+                            <strong>Lịch sử vĩnh viễn</strong>
+                            <div style="font-size: 0.9rem; opacity: 0.8;">Ghi lại lịch sử xác thực không thể thay đổi</div>
+                        </div>
+                    </li>
+                </ul>
+
+                <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                    <h4><i class="fas fa-info-circle"></i> Hướng dẫn sử dụng</h4>
+                    <ol style="margin-top: 10px; padding-left: 20px; font-size: 0.9rem;">
+                        <li>Kết nối ví MetaMask</li>
+                        <li>Chọn file cần xác thực</li>
+                        <li>Nhấn "Xác thực trên Blockchain"</li>
+                        <li>Xác nhận giao dịch trong MetaMask</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Right Panel - Functionality -->
+            <div class="right-panel">
+                <!-- Wallet Connection Section -->
+                <div class="wallet-section">
+                    <h3><i class="fas fa-wallet"></i> Kết nối Ví MetaMask</h3>
+                    <div class="wallet-info">
+                        <div id="walletStatus" style="flex: 1;">
+                            <p>Chưa kết nối ví MetaMask</p>
+                        </div>
+                        <button id="connectWallet" class="btn btn-primary">
+                            <i class="fas fa-plug"></i> Kết nối Ví
+                        </button>
+                    </div>
+                    <div id="connectedInfo" style="display: none;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                            <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                            <span>Đã kết nối thành công</span>
+                            <span class="network-info" id="networkInfo">Mumbai Testnet</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div class="wallet-address" id="walletAddress"></div>
+                            <button id="disconnectWallet" class="btn btn-outline" style="padding: 5px 10px; font-size: 0.8rem;">
+                                <i class="fas fa-times"></i> Ngắt kết nối
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Upload Section -->
+                <div class="document-section">
+                    <h3><i class="fas fa-file-upload"></i> Xác thực Tài liệu Mới</h3>
+                    <p style="margin: 10px 0; color: var(--gray);">
+                        Tải lên giấy tờ cần xác thực (PDF, DOC, JPG, PNG,...). Tối đa 10MB.
+                    </p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Kéo thả file vào đây hoặc click để chọn</h4>
+                        <p>Hỗ trợ đa dạng định dạng tài liệu</p>
+                        <input type="file" id="documentFile" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt,.ppt,.pptx">
+                    </div>
+
+                    <div class="file-info" id="fileInfo" style="display: none;">
+                        <div class="file-info-header">
+                            <div>
+                                <strong id="fileName"></strong>
+                                <div style="font-size: 0.9rem; color: var(--gray);" id="fileSize"></div>
+                            </div>
+                            <button class="btn btn-outline" id="clearFile" style="padding: 5px 10px;">
+                                <i class="fas fa-times"></i> Xóa
+                            </button>
+                        </div>
+                        <div id="fileHash" class="hash-display" style="display: none;"></div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="verifyBtn" class="btn btn-success" disabled>
+                            <i class="fas fa-shield-alt"></i> Xác thực trên Blockchain
+                        </button>
+                        <button id="checkBtn" class="btn btn-outline" disabled>
+                            <i class="fas fa-search"></i> Kiểm tra Xác thực
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Verification Result -->
+                <div class="verification-result" id="verificationResult">
+                    <h4 id="resultTitle"></h4>
+                    <p id="resultMessage"></p>
+                    <div class="hash-display" id="hashDisplay" style="display: none;"></div>
+                    <a href="#" class="transaction-link" id="transactionLink" target="_blank" style="display: none;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Xem giao dịch trên Blockchain
+                    </a>
+                </div>
+
+                <!-- Document History -->
+                <div class="document-history" id="documentHistory">
+                    <h3><i class="fas fa-history"></i> Lịch sử Xác thực</h3>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // CẤU HÌNH CONTRACT - THAY ĐỔI THÔNG TIN NÀY
+        // =============================================
+        const CONFIG = {
+            // THAY BẰNG ĐỊA CHỈ CONTRACT CỦA BẠN
+            contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+            
+            // ABI của contract - copy từ Remix IDE
+            contractABI: [
+                {
+                    "inputs": [
+                        {
+                            "internalType": "bytes32",
+                            "name": "_documentHash",
+                            "type": "bytes32"
+                        }
+                    ],
+                    "name": "checkDocument",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "bytes32",
+                            "name": "_documentHash",
+                            "type": "bytes32"
+                        }
+                    ],
+                    "name": "getDocumentInfo",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "exists",
+                            "type": "bool"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "verifiedBy",
+                            "type": "address"
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "timestamp",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "documentName",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "documentType",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "_user",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "getUserDocumentCount",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "_user",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "getUserDocuments",
+                    "outputs": [
+                        {
+                            "internalType": "bytes32[]",
+                            "name": "",
+                            "type": "bytes32[]"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "bytes32",
+                            "name": "_documentHash",
+                            "type": "bytes32"
+                        }
+                    ],
+                    "name": "isDocumentVerified",
+                    "outputs": [
+                        {
+                            "internalType": "bool",
+                            "name": "",
+                            "type": "bool"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "bytes32",
+                            "name": "_documentHash",
+                            "type": "bytes32"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_documentName",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_documentType",
+                            "type": "string"
+                        }
+                    ],
+                    "name": "verifyDocument",
+                    "outputs": [],
+                    "stateMutability": "nonpayable",
+                    "type": "function"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "checker",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": true,
+                            "internalType": "bytes32",
+                            "name": "documentHash",
+                            "type": "bytes32"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "bool",
+                            "name": "isVerified",
+                            "type": "bool"
+                        }
+                    ],
+                    "name": "DocumentChecked",
+                    "type": "event"
+                },
+                {
+                    "anonymous": false,
+                    "inputs": [
+                        {
+                            "indexed": true,
+                            "internalType": "address",
+                            "name": "verifier",
+                            "type": "address"
+                        },
+                        {
+                            "indexed": true,
+                            "internalType": "bytes32",
+                            "name": "documentHash",
+                            "type": "bytes32"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "documentName",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "string",
+                            "name": "documentType",
+                            "type": "string"
+                        },
+                        {
+                            "indexed": false,
+                            "internalType": "uint256",
+                            "name": "timestamp",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "DocumentVerified",
+                    "type": "event"
+                }
+            ],
+            
+            // Cấu hình mạng
+            network: {
+                name: "Polygon Mumbai",
+                chainId: "0x13881",
+                rpcUrl: "https://rpc-mumbai.maticvigil.com",
+                explorer: "https://mumbai.polygonscan.com"
+            }
+        };
+
+        // =============================================
+        // LỚP ỨNG DỤNG CHÍNH
+        // =============================================
+        class DocVerifyApp {
+            constructor() {
+                this.web3 = null;
+                this.contract = null;
+                this.userAccount = null;
+                this.currentFile = null;
+                this.currentFileHash = null;
+                this.userDocuments = [];
+                
+                this.initializeApp();
+            }
+
+            // Khởi tạo ứng dụng
+            initializeApp() {
+                this.bindEvents();
+                this.checkMetaMask();
+                this.setupEventListeners();
+            }
+
+            // Gắn sự kiện cho các nút
+            bindEvents() {
+                // Kết nối ví
+                document.getElementById('connectWallet').addEventListener('click', () => this.connectWallet());
+                document.getElementById('disconnectWallet').addEventListener('click', () => this.disconnectWallet());
+                
+                // Upload file
+                document.getElementById('uploadArea').addEventListener('click', () => document.getElementById('documentFile').click());
+                document.getElementById('documentFile').addEventListener('change', (e) => this.handleFileSelect(e));
+                document.getElementById('clearFile').addEventListener('click', () => this.clearFile());
+                
+                // Hành động
+                document.getElementById('verifyBtn').addEventListener('click', () => this.verifyDocument());
+                document.getElementById('checkBtn').addEventListener('click', () => this.checkDocument());
+            }
+
+            // Thiết lập drag and drop
+            setupDragAndDrop() {
+                const uploadArea = document.getElementById('uploadArea');
+                
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, this.preventDefaults, false);
+                });
+
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, () => {
+                        uploadArea.style.borderColor = 'var(--primary)';
+                        uploadArea.style.background = '#f8f9ff';
+                    }, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    uploadArea.addEventListener(eventName, () => {
+                        uploadArea.style.borderColor = '#ddd';
+                        uploadArea.style.background = '';
+                    }, false);
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    if (files.length) {
+                        this.handleFileSelect({ target: { files } });
+                    }
+                }, false);
+            }
+
+            preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Kiểm tra MetaMask
+            async checkMetaMask() {
+                if (window.ethereum) {
+                    try {
+                        this.web3 = new Web3(window.ethereum);
+                        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                        if (accounts.length > 0) {
+                            this.userAccount = accounts[0];
+                            this.updateWalletUI();
+                            await this.initializeContract();
+                            await this.loadUserHistory();
+                        }
+                    } catch (error) {
+                        console.error('Lỗi kiểm tra MetaMask:', error);
+                        this.showResult('error', 'Lỗi', 'Không thể kết nối với MetaMask.');
+                    }
+                } else {
+                    this.showResult('error', 'MetaMask không tìm thấy', 'Vui lòng cài đặt MetaMask để sử dụng ứng dụng.');
+                }
+            }
+
+            // Kết nối ví MetaMask
+            async connectWallet() {
+                if (!window.ethereum) {
+                    this.showResult('error', 'Lỗi', 'Vui lòng cài đặt MetaMask để sử dụng ứng dụng.');
+                    return;
+                }
+
+                try {
+                    const connectBtn = document.getElementById('connectWallet');
+                    connectBtn.innerHTML = '<div class="loading"></div> Đang kết nối...';
+                    connectBtn.disabled = true;
+
+                    // Yêu cầu kết nối tài khoản
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    this.web3 = new Web3(window.ethereum);
+                    const accounts = await this.web3.eth.getAccounts();
+                    this.userAccount = accounts[0];
+                    
+                    // Kiểm tra mạng
+                    const chainId = await this.web3.eth.getChainId();
+                    await this.checkNetwork(chainId);
+                    
+                    // Khởi tạo contract và UI
+                    await this.initializeContract();
+                    this.updateWalletUI();
+                    await this.loadUserHistory();
+                    
+                    connectBtn.innerHTML = '<i class="fas fa-plug"></i> Kết nối Ví';
+                    connectBtn.disabled = false;
+
+                    this.showResult('success', 'Thành công', 'Đã kết nối ví MetaMask thành công!');
+
+                } catch (error) {
+                    console.error('Lỗi kết nối:', error);
+                    this.showResult('error', 'Lỗi kết nối', error.message || 'Không thể kết nối với MetaMask.');
+                    
+                    const connectBtn = document.getElementById('connectWallet');
+                    connectBtn.innerHTML = '<i class="fas fa-plug"></i> Kết nối Ví';
+                    connectBtn.disabled = false;
+                }
+            }
+
+            // Ngắt kết nối ví
+            disconnectWallet() {
+                this.userAccount = null;
+                this.contract = null;
+                this.web3 = null;
+                this.userDocuments = [];
+                
+                document.getElementById('walletStatus').style.display = 'block';
+                document.getElementById('connectedInfo').style.display = 'none';
+                document.getElementById('verifyBtn').disabled = true;
+                document.getElementById('checkBtn').disabled = true;
+                document.getElementById('documentHistory').style.display = 'none';
+                
+                this.showResult('info', 'Thông báo', 'Đã ngắt kết nối ví.');
+            }
+
+            // Kiểm tra mạng
+            async checkNetwork(chainId) {
+                const expectedChainId = parseInt(CONFIG.network.chainId, 16);
+                if (chainId !== expectedChainId) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: CONFIG.network.chainId }],
+                        });
+                    } catch (switchError) {
+                        // Nếu mạng chưa được thêm vào MetaMask
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: CONFIG.network.chainId,
+                                    chainName: CONFIG.network.name,
+                                    rpcUrls: [CONFIG.network.rpcUrl],
+                                }],
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Khởi tạo contract
+            async initializeContract() {
+                try {
+                    this.contract = new this.web3.eth.Contract(CONFIG.contractABI, CONFIG.contractAddress);
+                    console.log('Contract đã được khởi tạo thành công');
+                } catch (error) {
+                    console.error('Lỗi khởi tạo contract:', error);
+                    this.showResult('error', 'Lỗi Contract', 'Không thể kết nối với smart contract.');
+                }
+            }
+
+            // Cập nhật giao diện ví
+            updateWalletUI() {
+                document.getElementById('walletStatus').style.display = 'none';
+                document.getElementById('connectedInfo').style.display = 'block';
+                
+                const shortAddress = this.userAccount.substring(0, 6) + '...' + this.userAccount.substring(38);
+                document.getElementById('walletAddress').textContent = shortAddress;
+                
+                // Kích hoạt nút nếu có file được chọn
+                if (this.currentFile) {
+                    document.getElementById('verifyBtn').disabled = false;
+                    document.getElementById('checkBtn').disabled = false;
+                }
+            }
+
+            // Xử lý chọn file
+            async handleFileSelect(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // Kiểm tra kích thước file (tối đa 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    this.showResult('error', 'Lỗi', 'File quá lớn. Vui lòng chọn file nhỏ hơn 10MB.');
+                    return;
+                }
+
+                this.currentFile = file;
+                this.currentFileHash = null;
+
+                // Cập nhật thông tin file trên UI
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = this.formatFileSize(file.size);
+                document.getElementById('fileInfo').style.display = 'block';
+
+                // Hiển thị trạng thái đang xử lý
+                document.getElementById('fileHash').style.display = 'block';
+                document.getElementById('fileHash').textContent = 'Đang tạo mã hash...';
+
+                // Tạo hash cho file
+                try {
+                    this.currentFileHash = await this.generateFileHash(file);
+                    document.getElementById('fileHash').textContent = `Mã hash: ${this.currentFileHash}`;
+                    console.log('Hash file đã được tạo:', this.currentFileHash);
+                } catch (error) {
+                    console.error('Lỗi tạo hash:', error);
+                    this.showResult('error', 'Lỗi', 'Không thể xử lý file. Vui lòng thử lại.');
+                    return;
+                }
+
+                // Kích hoạt nút hành động nếu ví đã kết nối
+                if (this.userAccount) {
+                    document.getElementById('verifyBtn').disabled = false;
+                    document.getElementById('checkBtn').disabled = false;
+                }
+
+                this.hideResult();
+            }
+
+            // Xóa file
+            clearFile() {
+                this.currentFile = null;
+                this.currentFileHash = null;
+                document.getElementById('documentFile').value = '';
+                document.getElementById('fileInfo').style.display = 'none';
+                document.getElementById('verifyBtn').disabled = true;
+                document.getElementById('checkBtn').disabled = true;
+                this.hideResult();
+            }
+
+            // Tạo hash SHA-256 cho file
+            async generateFileHash(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const arrayBuffer = reader.result;
+                        crypto.subtle.digest('SHA-256', arrayBuffer).then(hashBuffer => {
+                            const hashArray = Array.from(new Uint8Array(hashBuffer));
+                            const hashHex = '0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                            resolve(hashHex);
+                        }).catch(reject);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+
+            // Xác thực document
+            async verifyDocument() {
+                if (!this.userAccount) {
+                    this.showResult('error', 'Lỗi', 'Vui lòng kết nối ví MetaMask trước.');
+                    return;
+                }
+
+                if (!this.currentFileHash) {
+                    this.showResult('error', 'Lỗi', 'Vui lòng chọn file cần xác thực.');
+                    return;
+                }
+
+                try {
+                    const verifyBtn = document.getElementById('verifyBtn');
+                    verifyBtn.innerHTML = '<div class="loading"></div> Đang xác thực...';
+                    verifyBtn.disabled = true;
+
+                    // Lấy phần mở rộng file
+                    const fileExtension = this.currentFile.name.split('.').pop().toLowerCase();
+                    
+                    // Gọi hàm verifyDocument trong smart contract
+                    const receipt = await this.contract.methods.verifyDocument(
+                        this.currentFileHash,
+                        this.currentFile.name,
+                        fileExtension
+                    ).send({ 
+                        from: this.userAccount,
+                        gas: 300000 // Giới hạn gas
+                    });
+
+                    verifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Xác thực trên Blockchain';
+                    verifyBtn.disabled = false;
+
+                    this.showResult(
+                        'success', 
+                        'Xác thực Thành công!', 
+                        `Tài liệu "${this.currentFile.name}" đã được xác thực trên Blockchain.`,
+                        this.currentFileHash,
+                        receipt.transactionHash
+                    );
+
+                    // Cập nhật lịch sử
+                    await this.loadUserHistory();
+
+                } catch (error) {
+                    console.error('Lỗi xác thực:', error);
+                    verifyBtn.innerHTML = '<i class="fas fa-shield-alt"></i> Xác thực trên Blockchain';
+                    verifyBtn.disabled = false;
+
+                    if (error.message.includes('already verified')) {
+                        this.showResult('error', 'Lỗi', 'Tài liệu này đã được xác thực trước đó.');
+                    } else if (error.message.includes('user rejected')) {
+                        this.showResult('error', 'Đã hủy', 'Bạn đã hủy giao dịch trong MetaMask.');
+                    } else {
+                        this.showResult('error', 'Lỗi Xác thực', error.message);
+                    }
+                }
+            }
+
+            // Kiểm tra document
+            async checkDocument() {
+                if (!this.userAccount) {
+                    this.showResult('error', 'Lỗi', 'Vui lòng kết nối ví MetaMask trước.');
+                    return;
+                }
+
+                if (!this.currentFileHash) {
+                    this.showResult('error', 'Lỗi', 'Vui lòng chọn file cần kiểm tra.');
+                    return;
+                }
+
+                try {
+                    const checkBtn = document.getElementById('checkBtn');
+                    checkBtn.innerHTML = '<div class="loading"></div> Đang kiểm tra...';
+                    checkBtn.disabled = true;
+
+                    // Gọi hàm isDocumentVerified trong smart contract
+                    const isVerified = await this.contract.methods.isDocumentVerified(this.currentFileHash).call();
+
+                    checkBtn.innerHTML = '<i class="fas fa-search"></i> Kiểm tra Xác thực';
+                    checkBtn.disabled = false;
+
+                    if (isVerified) {
+                        // Lấy thông tin chi tiết
+                        const docInfo = await this.contract.methods.getDocumentInfo(this.currentFileHash).call();
+                        const verifyDate = new Date(docInfo.timestamp * 1000).toLocaleString('vi-VN');
+                        
+                        this.showResult(
+                            'success', 
+                            'Đã được Xác thực', 
+                            `Tài liệu "${docInfo.documentName}" đã được xác thực vào ${verifyDate} bởi ${docInfo.verifiedBy.substring(0, 8)}...`,
+                            this.currentFileHash
+                        );
+                    } else {
+                        this.showResult(
+                            'error', 
+                            'Chưa được Xác thực', 
+                            `Tài liệu "${this.currentFile.name}" chưa được xác thực trên Blockchain.`
+                        );
+                    }
+
+                } catch (error) {
+                    console.error('Lỗi kiểm tra:', error);
+                    checkBtn.innerHTML = '<i class="fas fa-search"></i> Kiểm tra Xác thực';
+                    checkBtn.disabled = false;
+                    this.showResult('error', 'Lỗi Kiểm tra', error.message);
+                }
+            }
+
+            // Tải lịch sử document của user
+            async loadUserHistory() {
+                if (!this.userAccount || !this.contract) return;
+
+                try {
+                    // Lấy số lượng document
+                    const docCount = await this.contract.methods.getUserDocumentCount(this.userAccount).call();
+                    
+                    if (docCount > 0) {
+                        document.getElementById('documentHistory').style.display = 'block';
+                        const historyList = document.getElementById('historyList');
+                        historyList.innerHTML = '<p>Đang tải lịch sử...</p>';
+
+                        // Lấy danh sách document hash
+                        const docHashes = await this.contract.methods.getUserDocuments(this.userAccount).call();
+                        
+                        let historyHTML = '';
+                        for (let i = Math.max(0, docHashes.length - 5); i < docHashes.length; i++) {
+                            const hash = docHashes[i];
+                            const docInfo = await this.contract.methods.getDocumentInfo(hash).call();
+                            const verifyDate = new Date(docInfo.timestamp * 1000).toLocaleString('vi-VN');
+                            
+                            historyHTML += `
+                                <div class="history-item">
+                                    <div style="display: flex; justify-content: between; align-items: center;">
+                                        <strong>${docInfo.documentName}</strong>
+                                        <span class="status-badge status-verified">Đã xác thực</span>
+                                    </div>
+                                    <div style="font-size: 0.9rem; color: var(--gray); margin-top: 5px;">
+                                        <div>Thời gian: ${verifyDate}</div>
+                                        <div>Loại: ${docInfo.documentType}</div>
+                                        <div class="hash-display" style="margin-top: 5px; font-size: 0.8rem;">
+                                            Hash: ${hash.substring(0, 20)}...
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        historyList.innerHTML = historyHTML;
+                    }
+                } catch (error) {
+                    console.error('Lỗi tải lịch sử:', error);
+                }
+            }
+
+            // Hiển thị kết quả
+            showResult(type, title, message, hash = null, transactionHash = null) {
+                const resultElement = document.getElementById('verificationResult');
+                const titleElement = document.getElementById('resultTitle');
+                const messageElement = document.getElementById('resultMessage');
+                const hashElement = document.getElementById('hashDisplay');
+                const transactionLink = document.getElementById('transactionLink');
+
+                // Đặt lớp CSS
+                resultElement.className = 'verification-result';
+                resultElement.classList.add(`result-${type}`);
+                
+                // Đặt nội dung
+                titleElement.textContent = title;
+                messageElement.textContent = message;
+
+                // Hiển thị hash nếu có
+                if (hash) {
+                    hashElement.textContent = `Mã hash: ${hash}`;
+                    hashElement.style.display = 'block';
+                } else {
+                    hashElement.style.display = 'none';
+                }
+
+                // Hiển thị link transaction nếu có
+                if (transactionHash) {
+                    transactionLink.href = `${CONFIG.network.explorer}/tx/${transactionHash}`;
+                    transactionLink.style.display = 'inline-flex';
+                } else {
+                    transactionLink.style.display = 'none';
+                }
+
+                resultElement.style.display = 'block';
+                
+                // Tự động ẩn thông báo sau 10 giây
+                setTimeout(() => {
+                    if (type !== 'success') {
+                        this.hideResult();
+                    }
+                }, 10000);
+            }
+
+            // Ẩn kết quả
+            hideResult() {
+                document.getElementById('verificationResult').style.display = 'none';
+            }
+
+            // Định dạng kích thước file
+            formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        }
+
+        // Khởi tạo ứng dụng khi trang được tải
+        document.addEventListener('DOMContentLoaded', () => {
+            window.docVerifyApp = new DocVerifyApp();
+        });
+
+        // Xử lý thay đổi tài khoản trong MetaMask
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    window.docVerifyApp.disconnectWallet();
+                } else {
+                    window.location.reload();
+                }
+            });
+
+            window.ethereum.on('chainChanged', (chainId) => {
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
